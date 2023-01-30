@@ -28,7 +28,16 @@ const connection = mysql.createConnection({
 
 const PORT = 8000;
 
-const upload = multer({ dest: "uploads/" });
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, req.body.title + "-" + file.originalname);
+  },
+});
+
+const upload = multer({ storage });
 
 connection.connect((err) => {
   if (err) {
@@ -123,23 +132,17 @@ app.get("/get-challenges", (req, res) => {
 });
 
 app.post("/post-challenge", upload.single("image"), (req, res) => {
-  // Get the form data
   const title = req.body.title;
   const amount = req.body.amount;
   const description = req.body.description;
   const category = req.body.category;
   const region = req.body.region;
-
-  // Get the image file
-  const image = req.file;
-
-  // Generate a unique file name for the image
-  const imageFileName = `${Date.now()}-${image.originalname}`;
+  const image = title + "-" + req.file.originalname;
 
   // Insert the challenge information into the database
   const query =
     "INSERT INTO challenges (title, amount, description, category, region, image) VALUES (?, ?, ?, ?, ?, ?)";
-  const values = [title, amount, description, category, region, imageFileName];
+  const values = [title, amount, description, category, region, image];
   connection.query(query, values, (error, results) => {
     if (error) {
       console.log(error);

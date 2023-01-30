@@ -19,6 +19,7 @@ app.use(
 );
 app.use(cors());
 
+app.use("/uploads", express.static("uploads"));
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
@@ -118,13 +119,14 @@ app.get("/get-challenges", (req, res) => {
       return res.status(500).send(err);
     }
     const challengesList = challenges.map((challenge) => {
-      let image_url = "http://localhost:3000/uploads/" + challenge.image_url;
+      let image_url = "http://localhost:8000/uploads/" + challenge.image;
       return {
         id: challenge.id,
         title: challenge.title,
         amount: challenge.amount,
         description: challenge.description,
         image_url: image_url,
+        time_posted: challenge.post_time,
       };
     });
     return res.send(challengesList);

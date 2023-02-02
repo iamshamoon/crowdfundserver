@@ -5,7 +5,6 @@ const cors = require("cors");
 const mysql = require("mysql");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
-const fs = require("fs");
 const session = require("express-session");
 
 const app = express();
@@ -112,27 +111,6 @@ app.get("/get-challenges", (req, res) => {
   });
 });
 
-app.post("/post-challenge", upload.single("image"), (req, res) => {
-  const title = req.body.title;
-  const amount = req.body.amount;
-  const description = req.body.description;
-  const category = req.body.category;
-  const region = req.body.region;
-  const image = title + "-" + req.file.originalname;
-
-  // Insert the challenge information into the database
-  const query =
-    "INSERT INTO challenges (title, amount, description, category, region, image) VALUES (?, ?, ?, ?, ?, ?)";
-  const values = [title, amount, description, category, region, image];
-  connection.query(query, values, (error, results) => {
-    if (error) {
-      console.log(error);
-      res.status(500).json({ message: "Failed to save challenge." });
-    } else {
-      res.status(200).json({ message: "Challenge saved successfully." });
-    }
-  });
-});
 app.post("/register", (req, res) => {
   const { name, email, phoneNo, password, roll } = req.body;
   console.log(roll);
@@ -262,6 +240,28 @@ app.post("/admin-logout", (req, res) => {
   } catch (err) {
     res.status(401).json({ message: "Invalid or expired token" });
   }
+});
+
+app.post("/post-challenge", upload.single("image"), (req, res) => {
+  const title = req.body.title;
+  const amount = req.body.amount;
+  const description = req.body.description;
+  const category = req.body.category;
+  const region = req.body.region;
+  const image = title + "-" + req.file.originalname;
+
+  // Insert the challenge information into the database
+  const query =
+    "INSERT INTO challenges (title, amount, description, category, region, image) VALUES (?, ?, ?, ?, ?, ?)";
+  const values = [title, amount, description, category, region, image];
+  connection.query(query, values, (error, results) => {
+    if (error) {
+      console.log(error);
+      res.status(500).json({ message: "Failed to save challenge." });
+    } else {
+      res.status(200).json({ message: "Challenge saved successfully." });
+    }
+  });
 });
 
 app.listen(PORT, () => {

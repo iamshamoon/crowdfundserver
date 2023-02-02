@@ -57,7 +57,7 @@ connection.connect((err) => {
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    last_signin_time TIMESTAMP
+    last_signin_time VARCHAR(255)
   )
 `,
       function (err, results, fields) {
@@ -84,34 +84,13 @@ connection.connect((err) => {
   });
 });
 
-app.post("/admin/login", function (req, res) {
-  var email = req.body.email;
-  var password = req.body.password;
-  if (email && password) {
-    connection.query(
-      "SELECT * FROM admin WHERE email = ? AND password = ?",
-      [email, password],
-      function (error, results, fields) {
-        if (results.length > 0) {
-          req.session.loggedin = true;
-          req.session.email = email;
-          res.send({ status: 200, message: "Logged in successfully" });
-        } else {
-          res.send({ status: 401, message: "Invalid Credentials" });
-        }
-        res.end();
-      }
-    );
-  } else {
-    res.send({ status: 401, message: "Please enter Email and Password" });
-    res.end();
-  }
-});
+// const insertAdmin = `INSERT INTO admin (email, password, last_signin_time)
+//     VALUES ('admin@crowdfund.com', 'admin12345', '${new Date()}')`;
 
-app.get("/admin/logout", function (req, res) {
-  req.session.destroy();
-  res.send({ status: 200, message: "Logged out successfully" });
-});
+// connection.query(insertAdmin, (err) => {
+//   if (err) throw err;
+//   console.log("Admin data inserted");
+// });
 
 app.get("/get-challenges", (req, res) => {
   connection.query("SELECT * FROM challenges", (err, challenges) => {
@@ -256,6 +235,33 @@ app.put("/deactivate/:id", (req, res) => {
       res.status(201).json({ message: "User deactivated", user: user[0] });
     });
   });
+});
+
+app.post("/admin-login", (req, res) => {
+  const { email, password } = req.body;
+  const sql = "SELECT * FROM admin WHERE email = ? AND password = ?";
+  connection.query(sql, [email, password], (err, result) => {
+    if (err) {
+      res.status(500).json({ message: "Error logging in" });
+    } else if (result.length === 0) {
+      res.status(401).json({ message: "Invalid email or password" });
+    } else {
+      const user = result[0];
+      const token = jwt.sign({ id: user.email }, process.env.SECRET);
+      res.status(200).json({ message: "Logged in successfully", token, user });
+    }
+  });
+});
+
+app.post("/admin-logout", (req, res) => {
+  const token = req.headers.authorization.split(" ")[1];
+  try {
+    jwt.verify(token, process.env.SECRET);
+    // Invalidate or delete the token from the storage
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (err) {
+    res.status(401).json({ message: "Invalid or expired token" });
+  }
 });
 
 app.listen(PORT, () => {

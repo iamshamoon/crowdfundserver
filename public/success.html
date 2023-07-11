@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Stripe Sample Connect Onboarding for Express accounts</title>
+    <meta
+      name="description"
+      content="Stripe Sample Connect Onboarding for Express accounts"
+    />
+
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="./css/normalize.css" />
+    <link rel="stylesheet" href="./css/global.css" />
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="./js/script.js" defer></script>
+  </head>
+
+  <body>
+    <div class="sr-root">
+      <div class="sr-main">
+        <header class="sr-header">
+          <div class="sr-header__logo"></div>
+        </header>
+
+        <div class="sr-payment-summary payment-view">
+          <h1 class="order-amount">Saving account Information Please Wait!</h1>
+          <img src="" alt="" />
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+<script>
+  const params = new Proxy(new URLSearchParams(window.location.search), {
+    get: (searchParams, prop) => searchParams.get(prop),
+  });
+  console.log(params);
+  fetch("/api/accountCreated", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      uid: params.uid,
+      accId: params.accID,
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.message) {
+        document.querySelector(".order-amount").innerHTML =
+          "You can now close the tab!";
+      } else {
+        document.querySelector(".order-amount").innerHTML =
+          "Something went wrong!";
+        console.log("data", data);
+      }
+    });
+</script>
